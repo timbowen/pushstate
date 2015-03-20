@@ -7,4 +7,5 @@ Road Map:
   3. test in 2015
   4. test as new install
   5. add default css
-  6. 
+  6. clean up and consolidate files
+  7. instructions?
