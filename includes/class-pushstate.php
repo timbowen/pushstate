@@ -21,6 +21,14 @@ class pushstate {
 	public $settings = null;
 
 	/**
+	 * jquery vars to output to html
+	 * @var 	object
+	 * @access  
+	 * @since 	1.0.0
+	 */
+	protected static $jquery_vars = "";
+	
+	/**
 	 * The version number.
 	 * @var     string
 	 * @access  public
@@ -92,7 +100,21 @@ class pushstate {
 		$this->assets_dir = trailingslashit( $this->dir ) . 'assets';
 		$this->assets_url = esc_url( trailingslashit( plugins_url( '/assets/', $this->file ) ) );
 
-		$this->script_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+		//	Get options for plugin
+		$this->settings = $this->settings_fields();
+
+		// Load appropriate functions
+		if ( is_admin() ) {
+			$settings = pushstate_Settings::instance( $this );
+			$this->admin = new pushstate_Admin( $this );
+		}
+		else{
+			self::$jquery_vars = $this->get_option_values();
+			$this->front = new pushstate_Front( $this );
+			add_action ('wp_footer' , array(__CLASS__,'output_jquery_vars') , 999 );
+		}
+
+	//	$this->script_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 
 		register_activation_hook( $this->file, array( $this, 'install' ) );
 
@@ -104,15 +126,68 @@ class pushstate {
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 10, 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_styles' ), 10, 1 );
 
-		// Load API for generic admin functions
-		if ( is_admin() ) {
-			$this->admin = new pushstate_Admin_API();
-		}
-
 		// Handle localisation
 		$this->load_plugin_textdomain();
 		add_action( 'init', array( $this, 'load_localisation' ), 0 );
 	} // End __construct ()
+
+	/**
+	 * Settings Options
+	 * @return array Fields to be displayed on settings page
+	 */
+	private function settings_fields () {
+
+		$settings['general'] = array(
+			'title'					=> __( 'General', 'pushstate' ),
+			'description'			=> __( '', 'pushstate' ),
+			'fields'				=> array(
+				array(
+					'id' 			=> 'eggLoader_in_footer',
+					'label'			=> __( 'Place Javascript in Footer', 'pushstate' ),
+					'description'	=> __( '', 'pushstate' ),
+					'type'			=> 'checkbox',
+					'default'		=> 'on'
+				),
+				array(
+					'id' 			=> 'anchors_1',
+					'label'			=> __( 'Anchor Selectors' , 'pushstate' ),
+					'description'	=> __( 'Comma separated list of jQuery selectors for the anchor elements you want to trigger the ajax reload.', 'pushstate' ),
+					'type'			=> 'textarea',
+					'default'		=> '',
+					'placeholder'	=> __( 'a.class , #parent a', 'pushstate' )
+				),
+				array(
+					'id' 			=> 'containers_1',
+					'label'			=> __( 'Container Selectors' , 'pushstate' ),
+					'description'	=> __( 'Comma separated list of jQuery selectors for the container you want to update.', 'pushstate' ),
+					'type'			=> 'textarea',
+					'default'		=> '',
+					'placeholder'	=> __( '#main , #sidebar' )
+				),
+				array(
+					'id' 			=> 'classesin_1',
+					'label'			=> __( 'Fade-In Classes' , 'pushstate' ),
+					'description'	=> __( 'Comma separated list of classes to add to Containers before they are added.', 'pushstate' ),
+					'type'			=> 'textarea',
+					'default'		=> '',
+					'placeholder'	=> __( 'fadein, animate' )
+				),
+				array(
+					'id' 			=> 'classesout_1',
+					'label'			=> __( 'Fade-Out Classes' , 'pushstate' ),
+					'description'	=> __( 'Comma separated list of classes to add to Containers before they are removed.', 'pushstate' ),
+					'type'			=> 'textarea',
+					'default'		=> '',
+					'placeholder'	=> __( 'fadeout' )
+				)
+
+			)
+		);
+		
+		$settings = apply_filters( $this->_token . '_settings_fields', $settings );
+
+		return $settings;
+	}
 
 	/**
 	 * Wrapper function to register a new post type
@@ -166,8 +241,11 @@ class pushstate {
 	 * @return  void
 	 */
 	public function enqueue_scripts () {
-		wp_register_script( $this->_token . '-frontend', esc_url( $this->assets_url ) . 'js/frontend' . $this->script_suffix . '.js', array( 'jquery' ), $this->_version );
-		wp_enqueue_script( $this->_token . '-frontend' );
+		wp_register_script( $this->_token . '-pushState', esc_url( $this->assets_url ) . 'js/pushstate' . $this->script_suffix . '.js', array( 'jquery' ), $this->_version ,  ' . $this->eggLoader_in_footer() . ');
+		wp_enqueue_script( $this->_token . '-pushState' );
+		
+		wp_register_script( $this->_token . '-eggLoader', esc_url( $this->assets_url ) . 'js/eggLoader' . $this->script_suffix . '.js', array( 'jquery' ), $this->_version , ' . $this->eggLoader_in_footer() . ' );
+		wp_enqueue_script( $this->_token . '-eggLoader' );
 	} // End enqueue_scripts ()
 
 	/**
@@ -260,6 +338,7 @@ class pushstate {
 	 */
 	public function install () {
 		$this->_log_version_number();
+		$this->_log_defaults();
 	} // End install ()
 
 	/**
@@ -271,5 +350,113 @@ class pushstate {
 	private function _log_version_number () {
 		update_option( $this->_token . '_version', $this->_version );
 	} // End _log_version_number ()
+
+	/**
+	 * Log the defaults
+	 * @access  public
+	 * @since   1.0.0
+	 * @return  void
+	 */	 
+	private function _log_defaults () {
+		$token = $this->_token;
+		// iterate over settings and save the default as initial option
+		if ( is_array( $this->settings ) ) {
+			foreach ( $this->settings as $section => $data ) {
+				foreach ( $data['fields'] as $key=>$field ) {
+					$option_name = $field['id'];
+					$default = $field['default'];
+					if( $default ){
+						$name = $token."_".$option_name;
+						update_option( $name , $default );
+					}					
+				}
+			}
+		}
+	}
+
+	/**
+	 * Check if eggLoader.js is in footer
+	 * @return void
+	 */
+	private function eggLoader_in_footer () {
+		if( $this->get_option_value('eggLoader_in_footer') == 'on' ){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+
+	/**
+	 * Return option value
+	 * @return void
+	 */
+	private function get_option_value ( $id ) {
+		if ( is_array( $this->settings ) ) {
+			foreach ( $this->settings as $section => $data ) {
+				foreach ( $data['fields'] as $key=>$field ) {
+					$option_name = $field['id'];
+					if( $option_name == $id ){	
+						return $field['value'];
+					}
+				}
+			}
+		}				
+	}
+	
+	/**
+	 * Adds values to all options
+	 * @return void
+	 */
+	private function get_option_values () {
+		if ( is_array( $this->settings ) ) {
+			foreach ( $this->settings as $section => $data ) {
+				foreach ( $data['fields'] as $key=>$field ) {
+					$option_name = $this->_token."_".$field['id'];
+					$option = get_option( $option_name );
+					$this->settings[$section]['fields'][$key]['value'] = $option;
+					$jquery_vars[$field['id']] = $option; 
+				}
+			}			
+			return $jquery_vars;
+		}
+	}
+
+	public static function output_jquery_vars(){
+		echo "<script type='text/javascript'>
+		/*
+		 * pushState plugin javascript; output from plugins/pushstate/includes/class.pushstate.php
+		 */
+		 
+		var pushstate_variables = " . json_encode( self::$jquery_vars ) . "; 
+		jQuery(document).ready(function($) {
+		
+			var containers_1 = pushstate_variables.containers_1.replace(/ /g,'');
+			containers_1 = containers_1.split(',');
+			var classesInArr = pushstate_variables.classesin_1.split(',');
+			var classesInObj = {};
+			$.each( containers_1, function(e,v){
+				classesInObj[v] = classesInArr;
+			});
+			var classesOutArr = pushstate_variables.classesout_1.split(',');
+			var classesOutObj = {};
+			$.each( containers_1, function(e,v){
+				classesOutObj[v] = classesOutArr;
+			});
+
+			var options = {
+				containers 	: containers_1,
+				classesIn 	: classesInObj,
+				classesOut 	: classesOutObj,
+				delayLoad 	: 250,
+				loadSpinner : true		
+			}
+			
+			var anchors_1 = pushstate_variables.anchors_1;
+			$( anchors_1 ).EggLoader( options ); 
+
+		});
+		</script>";
+	}
 
 }

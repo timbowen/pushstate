@@ -1,11 +1,11 @@
 <?php
 /*
- * Plugin Name: pushstate
+ * Plugin Name: Pushstate
  * Version: 1.0
- * Plugin URI: http://www.hughlashbrooke.com/
- * Description: This is your starter template for your next WordPress plugin.
- * Author: Hugh Lashbrooke
- * Author URI: http://www.hughlashbrooke.com/
+ * Plugin URI: http://www.joinerylabs.com/
+ * Description: Asynchronous loading for Wordpress.
+ * Author: Trip Grass
+ * Author URI: http://www.joinerylabs.com/
  * Requires at least: 4.0
  * Tested up to: 4.0
  *
@@ -13,7 +13,7 @@
  * Domain Path: /lang/
  *
  * @package WordPress
- * @author Hugh Lashbrooke
+ * @author Trip Grass
  * @since 1.0.0
  */
 
@@ -24,9 +24,14 @@ require_once( 'includes/class-pushstate.php' );
 require_once( 'includes/class-pushstate-settings.php' );
 
 // Load plugin libraries
-require_once( 'includes/lib/class-pushstate-admin-api.php' );
 require_once( 'includes/lib/class-pushstate-post-type.php' );
 require_once( 'includes/lib/class-pushstate-taxonomy.php' );
+if(is_admin()){
+	require_once( 'includes/lib/class-pushstate-admin.php' );
+}
+else{
+	require_once( 'includes/lib/class-pushstate-front.php' );	
+}
 
 /**
  * Returns the main instance of pushstate to prevent the need to use globals.

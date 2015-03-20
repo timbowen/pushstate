@@ -37,12 +37,12 @@ class pushstate_Settings {
 	public $settings = array();
 
 	public function __construct ( $parent ) {
+		
 		$this->parent = $parent;
 
-		$this->base = 'wpt_';
+		$this->base = 'pushstate_';
 
-		// Initialise settings
-		add_action( 'init', array( $this, 'init_settings' ), 11 );
+		$this->settings = $parent->settings;
 
 		// Register plugin settings
 		add_action( 'admin_init' , array( $this, 'register_settings' ) );
@@ -55,19 +55,11 @@ class pushstate_Settings {
 	}
 
 	/**
-	 * Initialise settings
-	 * @return void
-	 */
-	public function init_settings () {
-		$this->settings = $this->settings_fields();
-	}
-
-	/**
 	 * Add settings page to admin menu
 	 * @return void
 	 */
 	public function add_menu_item () {
-		$page = add_options_page( __( 'Plugin Settings', 'pushstate' ) , __( 'Plugin Settings', 'pushstate' ) , 'manage_options' , $this->parent->_token . '_settings' ,  array( $this, 'settings_page' ) );
+		$page = add_options_page( __( 'Pushstate Settings', 'pushstate' ) , __( 'Pushstate	 Settings', 'pushstate' ) , 'manage_options' , $this->parent->_token . '_settings' ,  array( $this, 'settings_page' ) );
 		add_action( 'admin_print_styles-' . $page, array( $this, 'settings_assets' ) );
 	}
 
@@ -99,125 +91,6 @@ class pushstate_Settings {
 		$settings_link = '<a href="options-general.php?page=' . $this->parent->_token . '_settings">' . __( 'Settings', 'pushstate' ) . '</a>';
   		array_push( $links, $settings_link );
   		return $links;
-	}
-
-	/**
-	 * Build settings fields
-	 * @return array Fields to be displayed on settings page
-	 */
-	private function settings_fields () {
-
-		$settings['standard'] = array(
-			'title'					=> __( 'Standard', 'pushstate' ),
-			'description'			=> __( 'These are fairly standard form input fields.', 'pushstate' ),
-			'fields'				=> array(
-				array(
-					'id' 			=> 'text_field',
-					'label'			=> __( 'Some Text' , 'pushstate' ),
-					'description'	=> __( 'This is a standard text field.', 'pushstate' ),
-					'type'			=> 'text',
-					'default'		=> '',
-					'placeholder'	=> __( 'Placeholder text', 'pushstate' )
-				),
-				array(
-					'id' 			=> 'password_field',
-					'label'			=> __( 'A Password' , 'pushstate' ),
-					'description'	=> __( 'This is a standard password field.', 'pushstate' ),
-					'type'			=> 'password',
-					'default'		=> '',
-					'placeholder'	=> __( 'Placeholder text', 'pushstate' )
-				),
-				array(
-					'id' 			=> 'secret_text_field',
-					'label'			=> __( 'Some Secret Text' , 'pushstate' ),
-					'description'	=> __( 'This is a secret text field - any data saved here will not be displayed after the page has reloaded, but it will be saved.', 'pushstate' ),
-					'type'			=> 'text_secret',
-					'default'		=> '',
-					'placeholder'	=> __( 'Placeholder text', 'pushstate' )
-				),
-				array(
-					'id' 			=> 'text_block',
-					'label'			=> __( 'A Text Block' , 'pushstate' ),
-					'description'	=> __( 'This is a standard text area.', 'pushstate' ),
-					'type'			=> 'textarea',
-					'default'		=> '',
-					'placeholder'	=> __( 'Placeholder text for this textarea', 'pushstate' )
-				),
-				array(
-					'id' 			=> 'single_checkbox',
-					'label'			=> __( 'An Option', 'pushstate' ),
-					'description'	=> __( 'A standard checkbox - if you save this option as checked then it will store the option as \'on\', otherwise it will be an empty string.', 'pushstate' ),
-					'type'			=> 'checkbox',
-					'default'		=> ''
-				),
-				array(
-					'id' 			=> 'select_box',
-					'label'			=> __( 'A Select Box', 'pushstate' ),
-					'description'	=> __( 'A standard select box.', 'pushstate' ),
-					'type'			=> 'select',
-					'options'		=> array( 'drupal' => 'Drupal', 'joomla' => 'Joomla', 'wordpress' => 'WordPress' ),
-					'default'		=> 'wordpress'
-				),
-				array(
-					'id' 			=> 'radio_buttons',
-					'label'			=> __( 'Some Options', 'pushstate' ),
-					'description'	=> __( 'A standard set of radio buttons.', 'pushstate' ),
-					'type'			=> 'radio',
-					'options'		=> array( 'superman' => 'Superman', 'batman' => 'Batman', 'ironman' => 'Iron Man' ),
-					'default'		=> 'batman'
-				),
-				array(
-					'id' 			=> 'multiple_checkboxes',
-					'label'			=> __( 'Some Items', 'pushstate' ),
-					'description'	=> __( 'You can select multiple items and they will be stored as an array.', 'pushstate' ),
-					'type'			=> 'checkbox_multi',
-					'options'		=> array( 'square' => 'Square', 'circle' => 'Circle', 'rectangle' => 'Rectangle', 'triangle' => 'Triangle' ),
-					'default'		=> array( 'circle', 'triangle' )
-				)
-			)
-		);
-
-		$settings['extra'] = array(
-			'title'					=> __( 'Extra', 'pushstate' ),
-			'description'			=> __( 'These are some extra input fields that maybe aren\'t as common as the others.', 'pushstate' ),
-			'fields'				=> array(
-				array(
-					'id' 			=> 'number_field',
-					'label'			=> __( 'A Number' , 'pushstate' ),
-					'description'	=> __( 'This is a standard number field - if this field contains anything other than numbers then the form will not be submitted.', 'pushstate' ),
-					'type'			=> 'number',
-					'default'		=> '',
-					'placeholder'	=> __( '42', 'pushstate' )
-				),
-				array(
-					'id' 			=> 'colour_picker',
-					'label'			=> __( 'Pick a colour', 'pushstate' ),
-					'description'	=> __( 'This uses WordPress\' built-in colour picker - the option is stored as the colour\'s hex code.', 'pushstate' ),
-					'type'			=> 'color',
-					'default'		=> '#21759B'
-				),
-				array(
-					'id' 			=> 'an_image',
-					'label'			=> __( 'An Image' , 'pushstate' ),
-					'description'	=> __( 'This will upload an image to your media library and store the attachment ID in the option field. Once you have uploaded an imge the thumbnail will display above these buttons.', 'pushstate' ),
-					'type'			=> 'image',
-					'default'		=> '',
-					'placeholder'	=> ''
-				),
-				array(
-					'id' 			=> 'multi_select_box',
-					'label'			=> __( 'A Multi-Select Box', 'pushstate' ),
-					'description'	=> __( 'A standard multi-select box - the saved data is stored as an array.', 'pushstate' ),
-					'type'			=> 'select_multi',
-					'options'		=> array( 'linux' => 'Linux', 'mac' => 'Mac', 'windows' => 'Windows' ),
-					'default'		=> array( 'linux' )
-				)
-			)
-		);
-
-		$settings = apply_filters( $this->parent->_token . '_settings_fields', $settings );
-
-		return $settings;
 	}
 
 	/**
@@ -253,11 +126,12 @@ class pushstate_Settings {
 					}
 
 					// Register field
-					$option_name = $this->base . $field['id'];
-					register_setting( $this->parent->_token . '_settings', $option_name, $validation );
-
-					// Add field to page
-					add_settings_field( $field['id'], $field['label'], array( $this->parent->admin, 'display_field' ), $this->parent->_token . '_settings', $section, array( 'field' => $field, 'prefix' => $this->base ) );
+						$option_name = $this->base . $field['id'];
+						register_setting( $this->parent->_token . '_settings', $option_name, $validation );
+							
+						// Add field to page
+						add_settings_field( $field['id'], $field['label'], array( $this->parent->admin, 'display_field' ), $this->parent->_token . '_settings', $section, array( 'field' => $field, 'prefix' => $this->base ) );
+					
 				}
 
 				if ( ! $current_section ) break;
@@ -278,7 +152,7 @@ class pushstate_Settings {
 
 		// Build page HTML
 		$html = '<div class="wrap" id="' . $this->parent->_token . '_settings">' . "\n";
-			$html .= '<h2>' . __( 'Plugin Settings' , 'pushstate' ) . '</h2>' . "\n";
+			$html .= '<h2>' . __( 'Pushstate Settings' , 'pushstate' ) . '</h2>' . "\n";
 
 			$tab = '';
 			if ( isset( $_GET['tab'] ) && $_GET['tab'] ) {

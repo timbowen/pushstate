@@ -2,12 +2,12 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-class pushstate_Admin_API {
+class pushstate_Admin extends pushstate{
 
 	/**
 	 * Constructor function
 	 */
-	public function __construct () {
+	public function __construct ( $parent ) {
 		add_action( 'save_post', array( $this, 'save_meta_boxes' ), 10, 1 );
 	}
 
@@ -68,7 +68,10 @@ class pushstate_Admin_API {
 		$html = '';
 
 		switch( $field['type'] ) {
-
+			
+			case 'header':
+				$html .= esc_attr( $field['content'] );
+			
 			case 'text':
 			case 'url':
 			case 'email':
