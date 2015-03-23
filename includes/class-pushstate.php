@@ -430,7 +430,7 @@ class pushstate {
 		 
 		var pushstate_variables = " . json_encode( self::$jquery_vars ) . "; 
 		jQuery(document).ready(function($) {
-			if ( pushstate_variables.containers_1 &&  pushstate_variables.classesin_1 &&  pushstate_variables.classout_1 ){
+			if ( pushstate_variables.containers_1 &&  pushstate_variables.classesin_1 &&  pushstate_variables.classesout_1 ){
 				var containers_1 = pushstate_variables.containers_1.replace(/ /g,'');
 				containers_1 = containers_1.split(',');
 				var classesInArr = pushstate_variables.classesin_1.split(',');
