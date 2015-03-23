@@ -430,30 +430,31 @@ class pushstate {
 		 
 		var pushstate_variables = " . json_encode( self::$jquery_vars ) . "; 
 		jQuery(document).ready(function($) {
-		
-			var containers_1 = pushstate_variables.containers_1.replace(/ /g,'');
-			containers_1 = containers_1.split(',');
-			var classesInArr = pushstate_variables.classesin_1.split(',');
-			var classesInObj = {};
-			$.each( containers_1, function(e,v){
-				classesInObj[v] = classesInArr;
-			});
-			var classesOutArr = pushstate_variables.classesout_1.split(',');
-			var classesOutObj = {};
-			$.each( containers_1, function(e,v){
-				classesOutObj[v] = classesOutArr;
-			});
-
-			var options = {
-				containers 	: containers_1,
-				classesIn 	: classesInObj,
-				classesOut 	: classesOutObj,
-				delayLoad 	: 250,
-				loadSpinner : true		
+			if ( pushstate_variables.containers_1 &&  pushstate_variables.classesin_1 &&  pushstate_variables.classout_1 ){
+				var containers_1 = pushstate_variables.containers_1.replace(/ /g,'');
+				containers_1 = containers_1.split(',');
+				var classesInArr = pushstate_variables.classesin_1.split(',');
+				var classesInObj = {};
+				$.each( containers_1, function(e,v){
+					classesInObj[v] = classesInArr;
+				});
+				var classesOutArr = pushstate_variables.classesout_1.split(',');
+				var classesOutObj = {};
+				$.each( containers_1, function(e,v){
+					classesOutObj[v] = classesOutArr;
+				});
+	
+				var options = {
+					containers 	: containers_1,
+					classesIn 	: classesInObj,
+					classesOut 	: classesOutObj,
+					delayLoad 	: 250,
+					loadSpinner : true		
+				}
+				
+				var anchors_1 = pushstate_variables.anchors_1;
+				$( anchors_1 ).EggLoader( options ); 
 			}
-			
-			var anchors_1 = pushstate_variables.anchors_1;
-			$( anchors_1 ).EggLoader( options ); 
 
 		});
 		</script>";
